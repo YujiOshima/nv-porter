@@ -13,13 +13,19 @@ spec:
         app: prometheus
         component: nvidia-exporter
     spec:
+      volumes:
+      - name: nvidialib
+        hostPath:
+          path: /var/lib/nvidia-docker/volumes/nvidia_driver/375.66
       containers:
         - name: nvidia-exporter
           image: yujioshima/nv-porter
           imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: /usr/local/nvidia
+            name: nvidialib
           securityContext:
-              capabilities:
-                  add: ["SYS_ADMIN"]
+            privileged: true
           lifecycle:
             preStop:
               exec:
