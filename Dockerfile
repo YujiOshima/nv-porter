@@ -1,19 +1,6 @@
-FROM  ubuntu:16.04
-RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
-    NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
-    apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub && \
-    apt-key adv --export --no-emit-version -a $NVIDIA_GPGKEY_FPR | tail -n +5 > cudasign.pub && \
-    echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
-    echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list
-
-ENV CUDA_VERSION 8.0.61
-LABEL com.nvidia.cuda.version="${CUDA_VERSION}"
-ENV NVIDIA_CUDA_VERSION $CUDA_VERSION
-ENV CUDA_PKG_VERSION 8-0=$CUDA_VERSION-1
+FROM  nvidia/cuda:8.0-devel
+ENV GOLANG_VERSION 1.9
 RUN apt update && apt install -y --no-install-recommends\
-		cuda-core-$CUDA_PKG_VERSION \
-		cuda-driver-dev-$CUDA_PKG_VERSION \
-		cuda-nvml-dev-$CUDA_PKG_VERSION \
 		ca-certificates \
 		git \
 		g++ \
@@ -22,27 +9,7 @@ RUN apt update && apt install -y --no-install-recommends\
 		make \
 		pkg-config \
 		wget && \
-	ln -s cuda-8.0 /usr/local/cuda && \
 	rm -rf /var/lib/apt/lists/*
-RUN echo "/usr/local/cuda/lib64" >> /etc/ld.so.conf.d/cuda.conf && \
-    ldconfig
-
-# nvidia-docker 1.0
-LABEL com.nvidia.volumes.needed="nvidia_driver"
-
-RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
-    echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
-
-ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
-ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64/stubs/
-ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs:${LIBRARY_PATH}
-
-# nvidia-container-runtime
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-
-ENV GOLANG_VERSION 1.9
-
 RUN set -eux; \
 	dpkgArch="$(dpkg --print-architecture)"; \
 	case "${dpkgArch##*-}" in \
@@ -74,6 +41,8 @@ ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+RUN ln -s /usr/local/cuda/lib64/stubs/libnvidia-ml.so /usr/local/cuda/lib64/stubs/libnvidia-ml.so.1
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64/stubs
 WORKDIR $GOPATH
 RUN go get github.com/tankbusta/nvidia_exporter
 ENTRYPOINT ["nvidia_exporter"]
