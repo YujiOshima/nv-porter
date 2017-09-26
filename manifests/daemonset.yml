@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: nvidia-exporter
+  namespace: monitoring
+  labels:
+      app: prometheus
+      component: nvidia-exporter
+spec:
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        component: nvidia-exporter
+    spec:
+      containers:
+        - name: nvidia-exporter
+          image: yujioshima/nv-porter
+          imagePullPolicy: Always
+          securityContext:
+              capabilities:
+                  add: ["SYS_ADMIN"]
+          lifecycle:
+            preStop:
+              exec:
+                command: ["--web.listen-address", "0.0.0.0:9114"]
+          ports:
+          - name: prom-nv-exp
+            containerPort: 9114
+            hostPort: 9114 
+      hostNetwork: true
+      hostPID: true

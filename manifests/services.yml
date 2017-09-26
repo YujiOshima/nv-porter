@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+  name: prometheus-nvidia-exporter
+  namespace: monitoring
+  labels:
+    app: prometheus
+    component: nvidia-exporter
+spec:
+  clusterIP: None
+  ports:
+    - name: prometheus-nvidia-exporter
+      port: 9114
+      protocol: TCP
+  selector:
+    app: prometheus
+    component: nvidia-exporter
+  type: ClusterIP
