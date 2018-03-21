@@ -46,5 +46,5 @@ ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64/stubs
 WORKDIR $GOPATH
 RUN go get github.com/tankbusta/nvidia_exporter
 ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=utility
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 ENTRYPOINT ["nvidia_exporter"]
